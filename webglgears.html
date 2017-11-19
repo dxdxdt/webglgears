@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <title>webglgears</title>
+  <script type='application/javascript' src="js/gl-matrix-min.js"></script>
+  <script type='application/javascript' src="js/webglgears.js"></script>
+  <script type='application/javascript'>
+    (function () {
+      "use strict";
+      var surface;
+      var gl;
+      var wg;
+
+      window.addEventListener('load', function () {
+        let optCtxInfo;
+
+        // Prep canvas
+        surface = document.getElementById('surface');
+        surface.width = window.innerWidth;
+        surface.height = window.innerHeight;
+
+        // Prep WebGL context
+        optCtxInfo = WebGLGears.optimalContextParams();
+        optCtxInfo.attr.antialias = false; // TODO
+        gl = surface.getContext(optCtxInfo.type, optCtxInfo.attr);
+
+        // Prep WebGLGears instance
+        wg = new WebGLGears();
+        wg.verbose = true; // TODO
+        wg
+          .attach(window, gl)
+          .reshape(window.innerWidth, window.innerHeight);
+        wg.info(); // TODO
+
+        window.addEventListener('resize', function () {
+          surface.width = window.innerWidth;
+          surface.height = window.innerHeight;
+          wg.reshape(window.innerWidth, window.innerHeight);
+        }, false);
+
+        document.body.addEventListener('keyup', function (evt) {
+          switch (evt.code) {
+          case 'ArrowLeft': wg.view_roty += 5.0; break;
+          case 'ArrowRight': wg.view_roty -= 5.0; break;
+          case 'ArrowUp': wg.view_rotx += 5.0; break;
+          case 'ArrowDown': wg.view_rotx -= 5.0; break;
+          case 'KeyA': wg.animate = !wg.animate; break;
+          case 'Escape': wg.detach(); break;
+          }
+        }, false);
+      }, false);
+    })();
+  </script>
+<body style="margin: 0px; padding: 0px; overflow: hidden;">
+  <canvas id='surface'></canvas>
+</body>
+</head>
+</html>
