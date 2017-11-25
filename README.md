@@ -1,7 +1,7 @@
 # WebGL Gears
 'glxgears' demo rewritten as an web app
 
-[![IMAGE ALT TEXT HERE](https://img.youtube.com/vi/YOUTUBE_VIDEO_ID_HERE/0.jpg)](https://www.youtube.com/watch?v=YOUTUBE_VIDEO_ID_HERE)
+[![Youtube video HERE](https://img.youtube.com/vi/FhlCLcw2qb0/0.jpg)](https://www.youtube.com/watch?v=FhlCLcw2qb0)
 
 ## What?
 This is a WebGL 1.0 port of the infamous demo 'glxgears'.
@@ -21,8 +21,14 @@ I could have easily port, but the gears do not look the same as good old
 glxgears in that version.
 
 ## How?
-Visit `TODO` that I uploaded on my github.io. Or you could clone the repo
+Visit [github.io page](https://ashegoulding.github.io/webglgears/index.html) that I uploaded on my github.io. Or you could clone the repo
 and open `index.html` in your browser. Follow instructions there.
 
 ## Use as a Widget
-`TODO`
+You can iframe the app, `webglgears.html`:
+```
+<iframe width='300' height='300' src="https://ashegoulding.github.io/webglgears/webglgears.html">
+</iframe>
+```
+
+Or you could upload the entire project to your server.
