@@ -7,6 +7,7 @@ var WebGLGears = (function () {
     flat: {},
     smooth: {}
   };
+  var __VertexBuilder;
 
   loadShader = function (gl, src, type, opt) {
     let shader, shaderInfo;
@@ -223,11 +224,270 @@ var WebGLGears = (function () {
       }
     }
   };
+  __VertexBuilder = (function () {
+    var __MODE__ = {
+      NONE: 0,
+      QUADS: 1,
+      QUAD_STRIP: 2
+    };
 
-  progSrc.flat.vert = "uniform mat4 u_tf;\r\nuniform mat4 u_model;\r\nuniform mat3 u_nm;\r\nuniform vec3 u_lightPos;\r\nuniform vec3 u_ambient;\r\nuniform vec3 u_diffuse;\r\n\r\nattribute vec3 a_pos;\r\nattribute vec3 a_normal;\r\n\r\nvarying vec3 v_fragColor;\r\n\r\n\r\nvoid main () {\r\n  vec4 pos = vec4(a_pos, 1.0);\r\n  vec3 pos_ws = (u_model * pos).xyz;\r\n  float theta = max(dot(normalize(u_lightPos - pos_ws), normalize(a_normal * u_nm)), 0.0);\r\n\r\n  v_fragColor = u_ambient + u_diffuse * theta;\r\n  gl_Position = u_tf * pos;\r\n}\r\n";
+    Object.freeze(__MODE__);
+
+    return class VertexBuilder {
+      constructor () {
+        var __arr = null;
+        var __state = {
+          mode: __MODE__.NONE,
+          normal: new Float32Array(3),
+          ptr: {
+            index: null
+          },
+          idx: {
+            vertex: null,
+            index: null
+          },
+          tmp: {
+            idx: null,
+            vertex: null,
+            normal: null,
+            firstStrip: null
+          }
+        };
+
+        var __default;
+
+        __default = function (org, def) {
+          return isFinite(org) ? org : def;
+        };
+
+        Object.defineProperties(this, {
+          allocCalls: {
+            value: function (alloc) {
+              const ALLOC = {
+                QUADS: Math.trunc(alloc.QUADS) || 0,
+                QUAD_STRIP: Math.trunc(alloc.QUAD_STRIP) || 0
+              };
+              const NB_VERTEX = 3 * (ALLOC.QUADS + ALLOC.QUAD_STRIP);
+              const NB_INDEX = Math.trunc(ALLOC.QUADS / 4) * 6 + Math.max(Math.trunc(ALLOC.QUAD_STRIP / 2 - 1), 0) * 6;
+
+              __arr = {
+                vertex: new Float32Array(NB_VERTEX),
+                normal: new Float32Array(NB_VERTEX),
+                index: new Uint16Array(NB_INDEX)
+              };
+              __state.idx.vertex = __state.idx.index = __state.ptr.index = 0;
+
+              return this;
+            },
+            configurable: true
+          },
+          begin: {
+            value: function (mode) {
+              switch(mode) {
+              case __MODE__.QUADS:
+                __state.mode = __MODE__.QUADS;
+                __state.tmp.vertex = new Float32Array(3 * 4);
+                __state.tmp.normal = new Float32Array(3 * 4);
+                __state.tmp.idx = 0;
+                break;
+              case __MODE__.QUAD_STRIP:
+                __state.mode = __MODE__.QUAD_STRIP;
+                __state.tmp.vertex = new Float32Array(3 * 4);
+                __state.tmp.normal = new Float32Array(3 * 4);
+                __state.tmp.firstStrip = true;
+                __state.tmp.idx = 0;
+                break;
+              default:
+                throw Object.freeze(new TypeError("unknown value of 'mode': " + mode));
+              }
+
+              return this;
+            },
+            configurable: true
+          },
+          end: {
+            value: function () {
+              __state.mode = __state.tmp.vertex = __state.tmp.normal = __state.tmp.idx = __state.tmp.firstStrip = null;
+              return this;
+            },
+            configurable: true
+          },
+          vertex: {
+            value: function (x, y, z, w) {
+              z = __default(z, 0);
+              w = __default(w, 1);
+              x /= w;
+              y /= w;
+              z /= w;
+
+              __state.tmp.vertex[__state.tmp.idx + 0] = x;
+              __state.tmp.vertex[__state.tmp.idx + 1] = y;
+              __state.tmp.vertex[__state.tmp.idx + 2] = z;
+              __state.tmp.normal[__state.tmp.idx + 0] = __state.normal[0];
+              __state.tmp.normal[__state.tmp.idx + 1] = __state.normal[1];
+              __state.tmp.normal[__state.tmp.idx + 2] = __state.normal[2];
+
+              switch (__state.mode) {
+              case __MODE__.QUADS:
+                if (__state.tmp.idx >= 9) {
+                  __arr.vertex[__state.idx.vertex + 0] = __state.tmp.vertex[0];
+                  __arr.vertex[__state.idx.vertex + 1] = __state.tmp.vertex[1];
+                  __arr.vertex[__state.idx.vertex + 2] = __state.tmp.vertex[2];
+                  __arr.vertex[__state.idx.vertex + 3] = __state.tmp.vertex[3];
+                  __arr.vertex[__state.idx.vertex + 4] = __state.tmp.vertex[4];
+                  __arr.vertex[__state.idx.vertex + 5] = __state.tmp.vertex[5];
+                  __arr.vertex[__state.idx.vertex + 6] = __state.tmp.vertex[6];
+                  __arr.vertex[__state.idx.vertex + 7] = __state.tmp.vertex[7];
+                  __arr.vertex[__state.idx.vertex + 8] = __state.tmp.vertex[8];
+                  __arr.vertex[__state.idx.vertex + 9] = __state.tmp.vertex[9];
+                  __arr.vertex[__state.idx.vertex + 10] = __state.tmp.vertex[10];
+                  __arr.vertex[__state.idx.vertex + 11] = __state.tmp.vertex[11];
+
+                  __arr.normal[__state.idx.vertex + 0] = __state.tmp.vertex[0] + __state.tmp.normal[0];
+                  __arr.normal[__state.idx.vertex + 1] = __state.tmp.vertex[1] + __state.tmp.normal[1];
+                  __arr.normal[__state.idx.vertex + 2] = __state.tmp.vertex[2] + __state.tmp.normal[2];
+                  __arr.normal[__state.idx.vertex + 3] = __state.tmp.vertex[3] + __state.tmp.normal[3];
+                  __arr.normal[__state.idx.vertex + 4] = __state.tmp.vertex[4] + __state.tmp.normal[4];
+                  __arr.normal[__state.idx.vertex + 5] = __state.tmp.vertex[5] + __state.tmp.normal[5];
+                  __arr.normal[__state.idx.vertex + 6] = __state.tmp.vertex[6] + __state.tmp.normal[6];
+                  __arr.normal[__state.idx.vertex + 7] = __state.tmp.vertex[7] + __state.tmp.normal[7];
+                  __arr.normal[__state.idx.vertex + 8] = __state.tmp.vertex[8] + __state.tmp.normal[8];
+                  __arr.normal[__state.idx.vertex + 9] = __state.tmp.vertex[9] + __state.tmp.normal[9];
+                  __arr.normal[__state.idx.vertex + 10] =  __state.tmp.vertex[10] + __state.tmp.normal[10];
+                  __arr.normal[__state.idx.vertex + 11] =  __state.tmp.vertex[11] + __state.tmp.normal[11];
+
+                  __arr.index[__state.idx.index + 0] = __state.ptr.index + 3;
+                  __arr.index[__state.idx.index + 1] = __state.ptr.index + 0;
+                  __arr.index[__state.idx.index + 2] = __state.ptr.index + 1;
+                  __arr.index[__state.idx.index + 3] = __state.ptr.index + 1;
+                  __arr.index[__state.idx.index + 4] = __state.ptr.index + 2;
+                  __arr.index[__state.idx.index + 5] = __state.ptr.index + 3;
+
+                  __state.idx.vertex += 12;
+                  __state.idx.index += 6;
+                  __state.ptr.index += 4;
+                  __state.tmp.idx = 0;
+                }
+                else {
+                  __state.tmp.idx += 3;
+                }
+
+                break;
+              case __MODE__.QUAD_STRIP:
+                if (__state.tmp.firstStrip) {
+                  if (__state.tmp.idx >= 9) {
+                    __arr.vertex[__state.idx.vertex + 0] = __state.tmp.vertex[0];
+                    __arr.vertex[__state.idx.vertex + 1] = __state.tmp.vertex[1];
+                    __arr.vertex[__state.idx.vertex + 2] = __state.tmp.vertex[2];
+                    __arr.vertex[__state.idx.vertex + 3] = __state.tmp.vertex[3];
+                    __arr.vertex[__state.idx.vertex + 4] = __state.tmp.vertex[4];
+                    __arr.vertex[__state.idx.vertex + 5] = __state.tmp.vertex[5];
+                    __arr.vertex[__state.idx.vertex + 6] = __state.tmp.vertex[6];
+                    __arr.vertex[__state.idx.vertex + 7] = __state.tmp.vertex[7];
+                    __arr.vertex[__state.idx.vertex + 8] = __state.tmp.vertex[8];
+                    __arr.vertex[__state.idx.vertex + 9] = __state.tmp.vertex[9];
+                    __arr.vertex[__state.idx.vertex + 10] = __state.tmp.vertex[10];
+                    __arr.vertex[__state.idx.vertex + 11] = __state.tmp.vertex[11];
+
+                    __arr.normal[__state.idx.vertex + 0] = __state.tmp.vertex[0] + __state.tmp.normal[0];
+                    __arr.normal[__state.idx.vertex + 1] = __state.tmp.vertex[1] + __state.tmp.normal[1];
+                    __arr.normal[__state.idx.vertex + 2] = __state.tmp.vertex[2] + __state.tmp.normal[2];
+                    __arr.normal[__state.idx.vertex + 3] = __state.tmp.vertex[3] + __state.tmp.normal[3];
+                    __arr.normal[__state.idx.vertex + 4] = __state.tmp.vertex[4] + __state.tmp.normal[4];
+                    __arr.normal[__state.idx.vertex + 5] = __state.tmp.vertex[5] + __state.tmp.normal[5];
+                    __arr.normal[__state.idx.vertex + 6] = __state.tmp.vertex[6] + __state.tmp.normal[6];
+                    __arr.normal[__state.idx.vertex + 7] = __state.tmp.vertex[7] + __state.tmp.normal[7];
+                    __arr.normal[__state.idx.vertex + 8] = __state.tmp.vertex[8] + __state.tmp.normal[8];
+                    __arr.normal[__state.idx.vertex + 9] = __state.tmp.vertex[9] + __state.tmp.normal[9];
+                    __arr.normal[__state.idx.vertex + 10] =  __state.tmp.vertex[10] + __state.tmp.normal[10];
+                    __arr.normal[__state.idx.vertex + 11] =  __state.tmp.vertex[11] + __state.tmp.normal[11];
+
+                    __arr.index[__state.idx.index + 0] = __state.ptr.index + 0;
+                    __arr.index[__state.idx.index + 1] = __state.ptr.index + 1;
+                    __arr.index[__state.idx.index + 2] = __state.ptr.index + 3;
+                    __arr.index[__state.idx.index + 3] = __state.ptr.index + 0;
+                    __arr.index[__state.idx.index + 4] = __state.ptr.index + 3;
+                    __arr.index[__state.idx.index + 5] = __state.ptr.index + 2;
+
+                    __state.idx.vertex += 12;
+                    __state.idx.index += 6;
+                    __state.ptr.index += 4;
+                    __state.tmp.idx = 0;
+                    __state.tmp.firstStrip = false;
+                  }
+                  else {
+                    __state.tmp.idx += 3;
+                  }
+                }
+                else {
+                  if (__state.tmp.idx >= 3) {
+                    __arr.vertex[__state.idx.vertex + 0] = __state.tmp.vertex[0];
+                    __arr.vertex[__state.idx.vertex + 1] = __state.tmp.vertex[1];
+                    __arr.vertex[__state.idx.vertex + 2] = __state.tmp.vertex[2];
+                    __arr.vertex[__state.idx.vertex + 3] = __state.tmp.vertex[3];
+                    __arr.vertex[__state.idx.vertex + 4] = __state.tmp.vertex[4];
+                    __arr.vertex[__state.idx.vertex + 5] = __state.tmp.vertex[5];
+
+                    __arr.normal[__state.idx.vertex + 0] = __state.tmp.vertex[0] + __state.tmp.normal[0];
+                    __arr.normal[__state.idx.vertex + 1] = __state.tmp.vertex[1] + __state.tmp.normal[1];
+                    __arr.normal[__state.idx.vertex + 2] = __state.tmp.vertex[2] + __state.tmp.normal[2];
+                    __arr.normal[__state.idx.vertex + 3] = __state.tmp.vertex[3] + __state.tmp.normal[3];
+                    __arr.normal[__state.idx.vertex + 4] = __state.tmp.vertex[4] + __state.tmp.normal[4];
+                    __arr.normal[__state.idx.vertex + 5] = __state.tmp.vertex[5] + __state.tmp.normal[5];
+
+                    __arr.index[__state.idx.index + 0] = __state.ptr.index + 0 - 2;
+                    __arr.index[__state.idx.index + 1] = __state.ptr.index + 1 - 2;
+                    __arr.index[__state.idx.index + 2] = __state.ptr.index + 3 - 2;
+                    __arr.index[__state.idx.index + 3] = __state.ptr.index + 0 - 2;
+                    __arr.index[__state.idx.index + 4] = __state.ptr.index + 3 - 2;
+                    __arr.index[__state.idx.index + 5] = __state.ptr.index + 2 - 2;
+
+                    __state.idx.vertex += 6;
+                    __state.idx.index += 6;
+                    __state.ptr.index += 2;
+                    __state.tmp.idx = 0;
+                  }
+                  else {
+                    __state.tmp.idx += 3;
+                  }
+                }
+
+                break;
+              }
+
+              return this;
+            },
+            configurable: true
+          },
+          normal: {
+            value: function (x, y, z) {
+              __state.normal[0] = x;
+              __state.normal[1] = y;
+              __state.normal[2] = z;
+
+              return this;
+            },
+            configurable: true
+          },
+          array: {
+            get: function () {
+              return __arr;
+            },
+            configurable: true
+          }
+        });
+      }
+
+      static get MODE () {
+        return __MODE__;
+      }
+    };
+  })();
+
+  progSrc.flat.vert = "uniform mat4 u_tf;\r\nuniform mat4 u_view;\r\nuniform mat4 u_mv;\r\nuniform mat3 u_nm;\r\n\r\nuniform vec3 u_lightDir_us;\r\nuniform vec3 u_ambient;\r\nuniform vec3 u_diffuse;\r\nuniform vec3 u_ambientIntensity;\r\n\r\nattribute vec3 a_pos;\r\nattribute vec3 a_normal;\r\n\r\nvarying vec3 v_fragColor;\r\n\r\n\r\nvoid main () {\r\n  vec4 pos_ms = vec4(a_pos, 1.0);\r\n  vec3 pos_cs = (u_mv * pos_ms).xyz;\r\n  vec3 normal_cs = (u_mv * vec4(a_normal, 1.0)).xyz;\r\n\r\n  float theta = max(dot(-u_lightDir_us, normalize((pos_cs - normal_cs).xyz)), 0.0);\r\n\r\n  v_fragColor = u_ambientIntensity * u_ambient + u_diffuse * theta;\r\n  gl_Position = u_tf * pos_ms;\r\n}\r\n";
   progSrc.flat.frag = "precision mediump float;\r\n\r\nvarying vec3 v_fragColor;\r\n\r\n\r\nvoid main () {\r\n  gl_FragColor = vec4(v_fragColor, 1.0);\r\n}\r\n";
-  progSrc.smooth.vert = "uniform mat4 u_tf;\r\nuniform mat4 u_model;\r\nuniform mat3 u_nm;\r\n\r\nattribute vec3 a_pos;\r\nattribute vec3 a_normal;\r\n\r\nvarying vec3 v_pos;\r\nvarying vec3 v_normal;\r\n\r\n\r\nvoid main () {\r\n  vec4 pos = vec4(a_pos, 1.0);\r\n\r\n  v_pos = (u_model * pos).xyz;\r\n  v_normal = u_nm * a_normal;\r\n  gl_Position = u_tf * pos;\r\n}\r\n";
-  progSrc.smooth.frag = "precision mediump float;\r\n\r\nuniform vec3 u_lightPos;\r\nuniform vec3 u_ambient;\r\nuniform vec3 u_diffuse;\r\n\r\nvarying vec3 v_pos;\r\nvarying vec3 v_normal;\r\n\r\n\r\nvoid main () {\r\n  float theta = max(dot(normalize(u_lightPos - v_pos), normalize(v_normal)), 0.0);\r\n  gl_FragColor = vec4(u_ambient + u_diffuse * theta, 1.0);\r\n}\r\n";
+  progSrc.smooth.vert = "uniform mat4 u_tf;\r\nuniform mat4 u_view;\r\nuniform mat4 u_mv;\r\nuniform mat3 u_nm;\r\n\r\nattribute vec3 a_pos;\r\nattribute vec3 a_normal;\r\n\r\nvarying vec3 v_normal_cs;\r\nvarying vec3 v_pos_cs;\r\n\r\n\r\nvoid main () {\r\n  vec4 pos_ms = vec4(a_pos, 1.0);\r\n\r\n  v_pos_cs = (u_mv * pos_ms).xyz;\r\n  v_normal_cs = (u_mv * vec4(a_normal, 1.0)).xyz;\r\n  gl_Position = u_tf * pos_ms;\r\n}\r\n";
+  progSrc.smooth.frag = "precision mediump float;\r\n\r\nuniform vec3 u_lightDir_us;\r\nuniform vec3 u_ambient;\r\nuniform vec3 u_diffuse;\r\nuniform vec3 u_ambientIntensity;\r\n\r\nvarying vec3 v_normal_cs;\r\nvarying vec3 v_pos_cs;\r\n\r\n\r\nvoid main () {\r\n  float theta = max(dot(-u_lightDir_us, normalize(v_pos_cs - v_normal_cs)), 0.0);\r\n  gl_FragColor = vec4(u_ambientIntensity * u_ambient + u_diffuse * theta, 1.0);\r\n}\r\n";
 
   return class WebGLGears {
     constructor () {
@@ -250,6 +510,12 @@ var WebGLGears = (function () {
         view: mat4.create(),
         projection: mat4.create()
       };
+      var __light = {
+        pos: {
+          ws: vec4.fromValues(5.0, 5.0, 10.0, 1.0),
+          us: vec3.create()
+        }
+      };
       var __tmp = {
         modelInv: mat4.create(),
         view: {
@@ -271,7 +537,6 @@ var WebGLGears = (function () {
 
       __init = function () {
         let m;
-        let pos = [ 5.0, 5.0, 10.0 ];
 
         // Reset state members
         __frames = 0;
@@ -289,11 +554,13 @@ var WebGLGears = (function () {
           },
           unif: [
             'u_tf',
-            'u_model',
+            'u_view',
+            'u_mv',
             'u_nm',
-            'u_lightPos',
+            'u_lightDir_us',
             'u_ambient',
-            'u_diffuse'
+            'u_diffuse',
+            'u_ambientIntensity'
           ]
         });
         __prog.smooth = setupProgram(__gl, {
@@ -305,20 +572,20 @@ var WebGLGears = (function () {
           },
           unif: [
             'u_tf',
-            'u_model',
+            'u_view',
+            'u_mv',
             'u_nm',
-            'u_lightPos',
+            'u_lightDir_us',
             'u_ambient',
-            'u_diffuse'
+            'u_diffuse',
+            'u_ambientIntensity'
           ]
         });
 
         __gl.useProgram(__prog.flat.prog);
-        __gl.uniform3fv(__prog.flat.unif['u_lightPos'], pos);
+        __gl.uniform3fv(__prog.flat.unif['u_ambientIntensity'], [0.2, 0.2, 0.2]);
         __gl.useProgram(__prog.smooth.prog);
-        __gl.uniform3fv(__prog.smooth.unif['u_lightPos'], pos);
-
-        __gl.useProgram(null);
+        __gl.uniform3fv(__prog.smooth.unif['u_ambientIntensity'], [0.2, 0.2, 0.2]);
 
         m = __gear(1.0, 4.0, 1.0, 20, 0.7);
         m.material = [ 0.8, 0.1, 0.0 ];
@@ -334,12 +601,14 @@ var WebGLGears = (function () {
 
         for (m of __arrGears) {
           m.vec = {
-            translate: vec3.create()
+            translate: vec3.create(),
+            lightPos_cs: vec3.create()
           };
           m.mat = {
             rotate:  mat4.create(),
             translate:  mat4.create(),
             model: mat4.create(),
+            mv: mat4.create(),
             nm: mat3.create(),
             tf: mat4.create()
           };
@@ -367,23 +636,19 @@ var WebGLGears = (function () {
       //         smooth.buf.normal
       //         smooth.buf.index
       __gear = function (inner_radius, outer_radius, width, teeth, tooth_depth) {
-        let arrSize = {
-          flat: {
-            v: ((teeth * 4 + 2) * 3 * 2) + (teeth * 4 * 3 * 2) + ((teeth * 8 + 2) * 3),
-            i: (teeth * 6 * 2) + ((teeth * 2 + 1) * 6) + ((teeth * 4 + 1) * 6)
-          },
-          smooth: {
-            v: (teeth + 1) * 2 * 3,
-            i: teeth * 6
-          }
+        let vb = {
+          flat: (new __VertexBuilder()).allocCalls({
+            QUADS: (teeth * 4) * 2,
+            QUAD_STRIP: (4 * teeth + 2) * 2 + (8 * teeth + 2)
+          }),
+          smooth: (new __VertexBuilder()).allocCalls({
+            QUADS: 0,
+            QUAD_STRIP: (teeth + 1) * 2
+          })
         };
         let ret = {
           flat: {
-            arr: {
-              vertex: new Float32Array(arrSize.flat.v),
-              normal: new Float32Array(arrSize.flat.v),
-              index: new Uint16Array(arrSize.flat.i)
-            },
+            arr: vb.flat.array,
             buf: {
               vertex: __gl.createBuffer(),
               normal: __gl.createBuffer(),
@@ -391,11 +656,7 @@ var WebGLGears = (function () {
             }
           },
           smooth: {
-            arr: {
-              vertex: new Float32Array(arrSize.smooth.v),
-              normal: new Float32Array(arrSize.smooth.v),
-              index: new Uint16Array(arrSize.smooth.i)
-            },
+            arr: vb.smooth.array,
             buf: {
               vertex: __gl.createBuffer(),
               normal: __gl.createBuffer(),
@@ -407,310 +668,115 @@ var WebGLGears = (function () {
         let r0, r1, r2;
         let angle, da;
         let u, v, len;
-        let ptr = {}, idx, nb_vertex;
-        let indexQuadStrip;
-
-        indexQuadStrip = function () {
-          for (i = 2; i < nb_vertex; i += 2) {
-            idx += 2;
-            ret.flat.arr.index[ptr.i + 0] = idx + 0 - 2;
-            ret.flat.arr.index[ptr.i + 1] = idx + 1 - 2;
-            ret.flat.arr.index[ptr.i + 2] = idx + 2 - 2;
-            ret.flat.arr.index[ptr.i + 3] = idx + 2 - 2;
-            ret.flat.arr.index[ptr.i + 4] = idx + 1 - 2;
-            ret.flat.arr.index[ptr.i + 5] = idx + 3 - 2;
-
-            ptr.i += 6;
-          }
-        };
 
         r0 = inner_radius;
         r1 = outer_radius - tooth_depth / 2.0;
         r2 = outer_radius + tooth_depth / 2.0;
 
-        idx = ptr.i = ptr.v = 0;
-
         // draw front face
         da = 2.0 * Math.PI / teeth / 4.0;
-        nb_vertex = 0;
+        vb.flat
+          .begin(__VertexBuilder.MODE.QUAD_STRIP)
+          .normal(0.0, 0.0, 1.0);
         for (i = 0; i <= teeth; i += 1) {
           angle = i * 2.0 * Math.PI / teeth;
-
-          ret.flat.arr.vertex[ptr.v + 0] = r0 * Math.cos(angle);
-          ret.flat.arr.vertex[ptr.v + 1] = r0 * Math.sin(angle);
-          ret.flat.arr.vertex[ptr.v + 2] = width * 0.5;
-          ret.flat.arr.vertex[ptr.v + 3] = r1 * Math.cos(angle);
-          ret.flat.arr.vertex[ptr.v + 4] = r1 * Math.sin(angle);
-          ret.flat.arr.vertex[ptr.v + 5] = width * 0.5;
-
-          ret.flat.arr.normal[ptr.v + 0] = 0.0;
-          ret.flat.arr.normal[ptr.v + 1] = 0.0;
-          ret.flat.arr.normal[ptr.v + 2] = 1.0;
-          ret.flat.arr.normal[ptr.v + 3] = 0.0;
-          ret.flat.arr.normal[ptr.v + 4] = 0.0;
-          ret.flat.arr.normal[ptr.v + 5] = 1.0;
-
-          ptr.v += 6;
-          nb_vertex += 2;
-
+          vb.flat
+            .vertex(r0 * Math.cos(angle), r0 * Math.sin(angle), width * 0.5)
+            .vertex(r1 * Math.cos(angle), r1 * Math.sin(angle), width * 0.5);
           if (i < teeth) {
-            ret.flat.arr.vertex[ptr.v + 0] = r0 * Math.cos(angle);
-            ret.flat.arr.vertex[ptr.v + 1] = r0 * Math.sin(angle)
-            ret.flat.arr.vertex[ptr.v + 2] = width * 0.5;
-            ret.flat.arr.vertex[ptr.v + 3] = r1 * Math.cos(angle + 3 + da);
-            ret.flat.arr.vertex[ptr.v + 4] = r1 * Math.sin(angle + 3 + da);
-            ret.flat.arr.vertex[ptr.v + 5] = width * 0.5;
-
-            ret.flat.arr.normal[ptr.v + 0] = 0.0;
-            ret.flat.arr.normal[ptr.v + 1] = 0.0;
-            ret.flat.arr.normal[ptr.v + 2] = 1.0;
-            ret.flat.arr.normal[ptr.v + 3] = 0.0;
-            ret.flat.arr.normal[ptr.v + 4] = 0.0;
-            ret.flat.arr.normal[ptr.v + 5] = 1.0;
-
-            ptr.v += 6;
-            nb_vertex += 2;
+            vb.flat
+              .vertex(r0 * Math.cos(angle), r0 * Math.sin(angle), width * 0.5)
+              .vertex(r1 * Math.cos(angle + 3 * da), r1 * Math.sin(angle + 3 * da), width * 0.5);
           }
         }
-        indexQuadStrip();
+        vb.flat.end();
 
         // draw front sides of teeth
         da = 2.0 * Math.PI / teeth / 4.0;
+        vb.flat.begin(__VertexBuilder.MODE.QUADS);
         for (i = 0; i < teeth; i += 1) {
           angle = i * 2.0 * Math.PI / teeth;
-
-          ret.flat.arr.vertex[ptr.v + 0] = r1 * Math.cos(angle);
-          ret.flat.arr.vertex[ptr.v + 1] = r1 * Math.sin(angle);
-          ret.flat.arr.vertex[ptr.v + 2] = width * 0.5;
-          ret.flat.arr.vertex[ptr.v + 3] = r2 * Math.cos(angle + da);
-          ret.flat.arr.vertex[ptr.v + 4] = r2 * Math.sin(angle + da);
-          ret.flat.arr.vertex[ptr.v + 5] = width * 0.5;
-          ret.flat.arr.vertex[ptr.v + 6] = r2 * Math.cos(angle + 2 * da);
-          ret.flat.arr.vertex[ptr.v + 7] = r2 * Math.sin(angle + 2 * da);
-          ret.flat.arr.vertex[ptr.v + 8] = width * 0.5;
-          ret.flat.arr.vertex[ptr.v + 9] = r1 * Math.cos(angle + 3 * da);
-          ret.flat.arr.vertex[ptr.v + 10] = r1 * Math.sin(angle + 3 * da);
-          ret.flat.arr.vertex[ptr.v + 11] = width * 0.5;
-
-          ret.flat.arr.normal[ptr.v + 0] = 0.0;
-          ret.flat.arr.normal[ptr.v + 1] = 0.0;
-          ret.flat.arr.normal[ptr.v + 2] = 1.0;
-          ret.flat.arr.normal[ptr.v + 3] = 0.0;
-          ret.flat.arr.normal[ptr.v + 4] = 0.0;
-          ret.flat.arr.normal[ptr.v + 5] = 1.0;
-          ret.flat.arr.normal[ptr.v + 6] = 0.0;
-          ret.flat.arr.normal[ptr.v + 7] = 0.0;
-          ret.flat.arr.normal[ptr.v + 8] = 1.0;
-          ret.flat.arr.normal[ptr.v + 9] = 0.0;
-          ret.flat.arr.normal[ptr.v + 10] = 0.0;
-          ret.flat.arr.normal[ptr.v + 11] = 1.0;
-
-          ptr.v += 12;
-
-          ret.flat.arr.index[ptr.i + 0] = idx + 0;
-          ret.flat.arr.index[ptr.i + 1] = idx + 1;
-          ret.flat.arr.index[ptr.i + 2] = idx + 2;
-          ret.flat.arr.index[ptr.i + 3] = idx + 2;
-          ret.flat.arr.index[ptr.i + 4] = idx + 1;
-          ret.flat.arr.index[ptr.i + 5] = idx + 3;
-
-          ptr.i += 6;
-          idx += 4;
+          vb.flat
+            .vertex(r1 * Math.cos(angle), r1 * Math.sin(angle), width * 0.5)
+            .vertex(r2 * Math.cos(angle + da), r2 * Math.sin(angle + da), width * 0.5)
+            .vertex(r2 * Math.cos(angle + 2 * da), r2 * Math.sin(angle + 2 * da), width * 0.5)
+            .vertex(r1 * Math.cos(angle + 3 * da), r1 * Math.sin(angle + 3 * da), width * 0.5);
         }
+        vb.flat.end();
 
         // draw back face
-        nb_vertex = 0;
+        vb.flat
+          .begin(__VertexBuilder.MODE.QUAD_STRIP)
+          .normal(0.0, 0.0, -1.0);
         for (i = 0; i <= teeth; i += 1) {
           angle = i * 2.0 * Math.PI / teeth;
-
-          ret.flat.arr.vertex[ptr.v + 0] = r1 * Math.cos(angle);
-          ret.flat.arr.vertex[ptr.v + 1] = r1 * Math.sin(angle);
-          ret.flat.arr.vertex[ptr.v + 2] = -width * 0.5;
-          ret.flat.arr.vertex[ptr.v + 3] = r0 * Math.cos(angle);
-          ret.flat.arr.vertex[ptr.v + 4] = r0 * Math.sin(angle);
-          ret.flat.arr.vertex[ptr.v + 5] = -width * 0.5;
-
-          ret.flat.arr.normal[ptr.v + 0] = 0.0;
-          ret.flat.arr.normal[ptr.v + 1] = 0.0;
-          ret.flat.arr.normal[ptr.v + 2] = -1.0;
-          ret.flat.arr.normal[ptr.v + 3] = 0.0;
-          ret.flat.arr.normal[ptr.v + 4] = 0.0;
-          ret.flat.arr.normal[ptr.v + 5] = -1.0;
-
-          ptr.v += 6;
-          nb_vertex += 2;
-
+          vb.flat
+            .vertex(r1 * Math.cos(angle), r1 * Math.sin(angle), -width * 0.5)
+            .vertex(r0 * Math.cos(angle), r0 * Math.sin(angle), -width * 0.5);
           if (i < teeth) {
-            ret.flat.arr.vertex[ptr.v + 0] = r1 * Math.cos(angle + 3 + da);
-            ret.flat.arr.vertex[ptr.v + 1] = r1 * Math.sin(angle + 3 + da);
-            ret.flat.arr.vertex[ptr.v + 2] = -width * 0.5;
-            ret.flat.arr.vertex[ptr.v + 3] = r0 * Math.cos(angle);
-            ret.flat.arr.vertex[ptr.v + 4] = r0 * Math.sin(angle)
-            ret.flat.arr.vertex[ptr.v + 5] = -width * 0.5;
-
-            ret.flat.arr.normal[ptr.v + 0] = 0.0;
-            ret.flat.arr.normal[ptr.v + 1] = 0.0;
-            ret.flat.arr.normal[ptr.v + 2] = -1.0;
-            ret.flat.arr.normal[ptr.v + 3] = 0.0;
-            ret.flat.arr.normal[ptr.v + 4] = 0.0;
-            ret.flat.arr.normal[ptr.v + 5] = -1.0;
-
-            ptr.v += 6;
-            nb_vertex += 2;
+            vb.flat
+              .vertex(r1 * Math.cos(angle + 3 * da), r1 * Math.sin(angle + 3 * da), -width * 0.5)
+              .vertex(r0 * Math.cos(angle), r0 * Math.sin(angle), -width * 0.5);
           }
         }
-        indexQuadStrip();
+        vb.flat.end();
 
         // draw back sides of teeth
         da = 2.0 * Math.PI / teeth / 4.0;
+        vb.flat.begin(__VertexBuilder.MODE.QUADS);
         for (i = 0; i < teeth; i += 1) {
           angle = i * 2.0 * Math.PI / teeth;
-
-          ret.flat.arr.vertex[ptr.v + 0] = r1 * Math.cos(angle + 3 * da);
-          ret.flat.arr.vertex[ptr.v + 1] = r1 * Math.sin(angle + 3 * da);
-          ret.flat.arr.vertex[ptr.v + 2] = -width * 0.5;
-          ret.flat.arr.vertex[ptr.v + 3] = r2 * Math.cos(angle + 2 * da);
-          ret.flat.arr.vertex[ptr.v + 4] = r2 * Math.sin(angle + 2 * da);
-          ret.flat.arr.vertex[ptr.v + 5] = -width * 0.5;
-          ret.flat.arr.vertex[ptr.v + 6] = r2 * Math.cos(angle + da);
-          ret.flat.arr.vertex[ptr.v + 7] = r2 * Math.sin(angle + da);
-          ret.flat.arr.vertex[ptr.v + 8] = -width * 0.5;
-          ret.flat.arr.vertex[ptr.v + 9] = r1 * Math.cos(angle);
-          ret.flat.arr.vertex[ptr.v + 10] = r1 * Math.sin(angle);
-          ret.flat.arr.vertex[ptr.v + 11] = -width * 0.5;
-
-          ret.flat.arr.normal[ptr.v + 0] = 0.0;
-          ret.flat.arr.normal[ptr.v + 1] = 0.0;
-          ret.flat.arr.normal[ptr.v + 2] = -1.0;
-          ret.flat.arr.normal[ptr.v + 3] = 0.0;
-          ret.flat.arr.normal[ptr.v + 4] = 0.0;
-          ret.flat.arr.normal[ptr.v + 5] = -1.0;
-          ret.flat.arr.normal[ptr.v + 6] = 0.0;
-          ret.flat.arr.normal[ptr.v + 7] = 0.0;
-          ret.flat.arr.normal[ptr.v + 8] = -1.0;
-          ret.flat.arr.normal[ptr.v + 9] = 0.0;
-          ret.flat.arr.normal[ptr.v + 10] = 0.0;
-          ret.flat.arr.normal[ptr.v + 11] = -1.0;
-
-          ptr.v += 12;
-
-          ret.flat.arr.index[ptr.i + 0] = idx + 0;
-          ret.flat.arr.index[ptr.i + 1] = idx + 1;
-          ret.flat.arr.index[ptr.i + 2] = idx + 2;
-          ret.flat.arr.index[ptr.i + 3] = idx + 2;
-          ret.flat.arr.index[ptr.i + 4] = idx + 1;
-          ret.flat.arr.index[ptr.i + 5] = idx + 3;
-
-          ptr.i += 6;
-          idx += 4;
+          vb.flat
+            .vertex(r1 * Math.cos(angle + 3 * da), r1 * Math.sin(angle + 3 * da), -width * 0.5)
+            .vertex(r2 * Math.cos(angle + 2 * da), r2 * Math.sin(angle + 2 * da), -width * 0.5)
+            .vertex(r2 * Math.cos(angle + da), r2 * Math.sin(angle + da), -width * 0.5)
+            .vertex(r1 * Math.cos(angle), r1 * Math.sin(angle), -width * 0.5);
         }
+        vb.flat.end();
 
         // draw outward faces of teeth
-        nb_vertex = 0;
+        vb.flat.begin(__VertexBuilder.MODE.QUAD_STRIP);
         for (i = 0; i < teeth; i += 1) {
           angle = i * 2.0 * Math.PI / teeth;
-
-          ret.flat.arr.vertex[ptr.v + 0] = r1 * Math.cos(angle);
-          ret.flat.arr.vertex[ptr.v + 1] = r1 * Math.sin(angle);
-          ret.flat.arr.vertex[ptr.v + 2] = width * 0.5;
-          ret.flat.arr.vertex[ptr.v + 3] = r1 * Math.cos(angle);
-          ret.flat.arr.vertex[ptr.v + 4] = r1 * Math.sin(angle);
-          ret.flat.arr.vertex[ptr.v + 5] = -width * 0.5;
-          ret.flat.arr.vertex[ptr.v + 6] = r2 * Math.cos(angle + da);
-          ret.flat.arr.vertex[ptr.v + 7] = r2 * Math.sin(angle + da);
-          ret.flat.arr.vertex[ptr.v + 8] = width * 0.5;
-          ret.flat.arr.vertex[ptr.v + 9] = r2 * Math.cos(angle + da);
-          ret.flat.arr.vertex[ptr.v + 10] = r2 * Math.sin(angle + da);
-          ret.flat.arr.vertex[ptr.v + 11] = -width * 0.5;
-          ret.flat.arr.vertex[ptr.v + 12] = r2 * Math.cos(angle + 2 * da);
-          ret.flat.arr.vertex[ptr.v + 13] = r2 * Math.sin(angle + 2 * da);
-          ret.flat.arr.vertex[ptr.v + 14] = width * 0.5;
-          ret.flat.arr.vertex[ptr.v + 15] = r2 * Math.cos(angle + 2 * da);
-          ret.flat.arr.vertex[ptr.v + 16] = r2 * Math.sin(angle + 2 * da);
-          ret.flat.arr.vertex[ptr.v + 17] = -width * 0.5;
-          ret.flat.arr.vertex[ptr.v + 18] = r1 * Math.cos(angle + 3 * da);
-          ret.flat.arr.vertex[ptr.v + 19] = r1 * Math.sin(angle + 3 * da);
-          ret.flat.arr.vertex[ptr.v + 20] = width * 0.5;
-          ret.flat.arr.vertex[ptr.v + 21] = r1 * Math.cos(angle + 3 * da);
-          ret.flat.arr.vertex[ptr.v + 22] = r1 * Math.sin(angle + 3 * da);
-          ret.flat.arr.vertex[ptr.v + 23] = -width * 0.5;
-
+          vb.flat
+            .vertex(r1 * Math.cos(angle), r1 * Math.sin(angle), width * 0.5)
+            .vertex(r1 * Math.cos(angle), r1 * Math.sin(angle), -width * 0.5);
           u = r2 * Math.cos(angle + da) - r1 * Math.cos(angle);
           v = r2 * Math.sin(angle + da) - r1 * Math.sin(angle);
           len = Math.sqrt(u * u + v * v);
           u /= len;
           v /= len;
-          ret.flat.arr.normal[ptr.v + 0] = v;
-          ret.flat.arr.normal[ptr.v + 1] = -u;
-          ret.flat.arr.normal[ptr.v + 2] = 0.0;
-          ret.flat.arr.normal[ptr.v + 3] = v;
-          ret.flat.arr.normal[ptr.v + 4] = -u;
-          ret.flat.arr.normal[ptr.v + 5] = 0.0;
-          ret.flat.arr.normal[ptr.v + 6] = Math.cos(angle);
-          ret.flat.arr.normal[ptr.v + 7] = Math.sin(angle);
-          ret.flat.arr.normal[ptr.v + 8] = 0.0;
-          ret.flat.arr.normal[ptr.v + 9] = Math.cos(angle);
-          ret.flat.arr.normal[ptr.v + 10] = Math.sin(angle);
-          ret.flat.arr.normal[ptr.v + 11] = 0.0;
+          vb.flat
+            .normal(v, -u, 0.0)
+            .vertex(r2 * Math.cos(angle + da), r2 * Math.sin(angle + da), width * 0.5)
+            .vertex(r2 * Math.cos(angle + da), r2 * Math.sin(angle + da), -width * 0.5);
+          vb.flat
+            .normal(Math.cos(angle), Math.sin(angle), 0.0)
+            .vertex(r2 * Math.cos(angle + 2 * da), r2 * Math.sin(angle + 2 * da), width * 0.5)
+            .vertex(r2 * Math.cos(angle + 2 * da), r2 * Math.sin(angle + 2 * da), -width * 0.5);
           u = r1 * Math.cos(angle + 3 * da) - r2 * Math.cos(angle + 2 * da);
           v = r1 * Math.sin(angle + 3 * da) - r2 * Math.sin(angle + 2 * da);
-          ret.flat.arr.normal[ptr.v + 12] = v;
-          ret.flat.arr.normal[ptr.v + 13] = -u;
-          ret.flat.arr.normal[ptr.v + 14] = 0.0;
-          ret.flat.arr.normal[ptr.v + 15] = v;
-          ret.flat.arr.normal[ptr.v + 16] = -u;
-          ret.flat.arr.normal[ptr.v + 17] = 0.0;
-          ret.flat.arr.normal[ptr.v + 18] = Math.cos(angle);
-          ret.flat.arr.normal[ptr.v + 19] = Math.sin(angle);
-          ret.flat.arr.normal[ptr.v + 20] = 0.0;
-          ret.flat.arr.normal[ptr.v + 21] = Math.cos(angle);
-          ret.flat.arr.normal[ptr.v + 22] = Math.sin(angle);
-          ret.flat.arr.normal[ptr.v + 23] = 0.0;
-
-          ptr.v += 24;
-          nb_vertex += 8;
+          vb.flat
+            .normal(v, -u, 0.0)
+            .vertex(r1 * Math.cos(angle + 3 * da), r1 * Math.sin(angle + 3 * da), width * 0.5)
+            .vertex(r1 * Math.cos(angle + 3 * da), r1 * Math.sin(angle + 3 * da), -width * 0.5)
+            .normal(Math.cos(angle), Math.sin(angle), 0.0);
         }
-        ret.flat.arr.vertex[ptr.v + 0] = r1 * Math.cos(0);
-        ret.flat.arr.vertex[ptr.v + 1] = r1 * Math.sin(0);
-        ret.flat.arr.vertex[ptr.v + 2] = width * 0.5;
-        ret.flat.arr.vertex[ptr.v + 3] = r1 * Math.cos(0);
-        ret.flat.arr.vertex[ptr.v + 4] = r1 * Math.sin(0);
-        ret.flat.arr.vertex[ptr.v + 5] = -width * 0.5;
-
-        ret.flat.arr.normal[ptr.v + 0] = Math.cos(angle);
-        ret.flat.arr.normal[ptr.v + 1] = Math.sin(angle);
-        ret.flat.arr.normal[ptr.v + 2] = 0.0;
-        ret.flat.arr.normal[ptr.v + 3] = Math.cos(angle);
-        ret.flat.arr.normal[ptr.v + 4] = Math.sin(angle);
-        ret.flat.arr.normal[ptr.v + 5] = 0.0;
-
-        nb_vertex += 2;
-        indexQuadStrip();
+        vb.flat
+          .vertex(r1 * Math.cos(0), r1 * Math.sin(0), width * 0.5)
+          .vertex(r1 * Math.cos(0), r1 * Math.sin(0), -width * 0.5)
+          .end();
 
         // draw inside radius cylinder
-        ptr.v = ptr.i = idx = 0;
-        nb_vertex = 0;
+        vb.smooth.begin(__VertexBuilder.MODE.QUAD_STRIP);
         for (i = 0; i <= teeth; i += 1) {
           angle = i * 2.0 * Math.PI / teeth;
-
-          ret.smooth.arr.vertex[ptr.v + 0] = r0 * Math.cos(angle);
-          ret.smooth.arr.vertex[ptr.v + 1] = r0 * Math.sin(angle);
-          ret.smooth.arr.vertex[ptr.v + 2] = -width * 0.5;
-          ret.smooth.arr.vertex[ptr.v + 3] = r0 * Math.cos(angle);
-          ret.smooth.arr.vertex[ptr.v + 4] = r0 * Math.sin(angle);
-          ret.smooth.arr.vertex[ptr.v + 4] = width * 0.5;
-
-          ret.smooth.arr.normal[ptr.v + 0] = -Math.cos(angle);
-          ret.smooth.arr.normal[ptr.v + 1] = -Math.sin(angle);
-          ret.smooth.arr.normal[ptr.v + 2] = 0.0;
-          ret.smooth.arr.normal[ptr.v + 3] = -Math.cos(angle);
-          ret.smooth.arr.normal[ptr.v + 4] = -Math.sin(angle);
-          ret.smooth.arr.normal[ptr.v + 5] = 0.0;
-
-          ptr.v += 6;
-          nb_vertex += 2;
+          vb.smooth
+            .normal(-Math.cos(angle), -Math.sin(angle), 0.0)
+            .vertex(r0 * Math.cos(angle), r0 * Math.sin(angle), -width * 0.5)
+            .vertex(r0 * Math.cos(angle), r0 * Math.sin(angle), width * 0.5);
         }
-        indexQuadStrip();
+        vb.smooth.end();
 
         // Upload buffers
         uploadBuffers(__gl, ret.flat.arr, ret.flat.buf);
@@ -722,6 +788,8 @@ var WebGLGears = (function () {
         let g;
 
         // Host side calculation
+        vec3.normalize(__light.pos.us, __light.pos.ws);
+
         vec3.copy(__arrGears[0].vec.translate, [-3.0, -2.0, 0.0]);
         mat4.fromRotation(__arrGears[0].mat.rotate, __angle * Math.PI / 180, [0.0, 0.0, 1.0]);
 
@@ -744,21 +812,23 @@ var WebGLGears = (function () {
           g.mat.nm[6] = __tmp.modelInv[2];
           g.mat.nm[7] = __tmp.modelInv[6];
           g.mat.nm[8] = __tmp.modelInv[10];
+          mat4.mul(g.mat.mv, __mat.view, g.mat.model);
           mat4.mul(g.mat.tf, __mat.projection, __mat.view);
           mat4.mul(g.mat.tf, g.mat.tf, g.mat.model);
         }
 
         // GL calls
-        // __gl.enable(__gl.CULL_FACE); FIXME
+        __gl.enable(__gl.CULL_FACE);
         __gl.enable(__gl.DEPTH_TEST);
         __gl.enableVertexAttribArray(0);
         __gl.enableVertexAttribArray(1);
 
         __gl.useProgram(__prog.flat.prog);
+        __gl.uniform3fv(__prog.flat.unif['u_lightDir_us'], __light.pos.us);
         for (g of __arrGears) {
           __gl.uniformMatrix4fv(__prog.flat.unif['u_tf'], __gl.FALSE, g.mat.tf);
-          __gl.uniformMatrix4fv(__prog.flat.unif['u_model'], __gl.FALSE, g.mat.model);
-          __gl.uniformMatrix3fv(__prog.flat.unif['u_nm'], __gl.FALSE, g.mat.nm);
+          __gl.uniformMatrix4fv(__prog.flat.unif['u_view'], __gl.FALSE, __mat.view);
+          __gl.uniformMatrix4fv(__prog.flat.unif['u_mv'], __gl.FALSE, g.mat.mv);
           __gl.uniform3fv(__prog.flat.unif['u_ambient'], g.material);
           __gl.uniform3fv(__prog.flat.unif['u_diffuse'], g.material);
 
@@ -772,10 +842,11 @@ var WebGLGears = (function () {
         }
 
         __gl.useProgram(__prog.smooth.prog);
+        __gl.uniform3fv(__prog.smooth.unif['u_lightDir_us'], __light.pos.us);
         for (g of __arrGears) {
           __gl.uniformMatrix4fv(__prog.smooth.unif['u_tf'], __gl.FALSE, g.mat.tf);
-          __gl.uniformMatrix4fv(__prog.smooth.unif['u_model'], __gl.FALSE, g.mat.model);
-          __gl.uniformMatrix3fv(__prog.smooth.unif['u_nm'], __gl.FALSE, g.mat.nm);
+          __gl.uniformMatrix4fv(__prog.smooth.unif['u_view'], __gl.FALSE, __mat.view);
+          __gl.uniformMatrix4fv(__prog.smooth.unif['u_mv'], __gl.FALSE, g.mat.mv);
           __gl.uniform3fv(__prog.smooth.unif['u_ambient'], g.material);
           __gl.uniform3fv(__prog.smooth.unif['u_diffuse'], g.material);
 
@@ -998,7 +1069,11 @@ var WebGLGears = (function () {
       __updateViewMatrix();
     }
 
-    static optimalContextParams() {
+    static get VertexBuilder () {
+      return __VertexBuilder;
+    }
+
+    static optimalContextParams () {
       return {
         type: 'webgl',
         attr: {

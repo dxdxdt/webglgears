@@ -1,5 +1,7 @@
-# webglgears
+# WebGL Gears
 'glxgears' demo rewritten as an web app
+
+[![IMAGE ALT TEXT HERE](https://img.youtube.com/vi/YOUTUBE_VIDEO_ID_HERE/0.jpg)](https://www.youtube.com/watch?v=YOUTUBE_VIDEO_ID_HERE)
 
 ## What?
 This is a WebGL 1.0 port of the infamous demo 'glxgears'.
@@ -14,7 +16,9 @@ OpenGL is used to implement glxgears got quite old. Therefore, it is
 important to stress that this project must not be regarded as a WebGL
 reference. There were many things to get around to implement glxgears with
 WebGL. The result should look the same whilst it is implemented
-not in the same way.
+not in the same way. I'm aware that there's a GLES2 port of Gears from which
+I could have easily port, but the gears do not look the same as good old
+glxgears in that version.
 
 ## How?
 Visit `TODO` that I uploaded on my github.io. Or you could clone the repo
