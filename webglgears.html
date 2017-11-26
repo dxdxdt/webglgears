@@ -12,18 +12,55 @@
       var gl;
       var wg;
       var uriParam;
+      var parseURIQuery, strBool;
+      let uriQuery;
+      let __defaultBool;
+
+      parseURIQuery = function (str) {
+        let arr = str.split('&');
+        let e, p;
+        let ret = {};
+
+        for (e of arr) {
+          p = e.split('=');
+          ret[decodeURIComponent(p[0])] = decodeURIComponent(p[1]);
+        }
+
+        return ret;
+      };
+      strBool = function (str) {
+        const n = parseFloat(str);
+
+        if (isNaN(n)) {
+          if (str === "true") {
+            return true;
+          }
+          else if (str === "false") {
+            return false;
+          }
+          return null;
+        }
+        return n !== 0;
+      };
+      __defaultBool = function (b, def) {
+        if (b === null) {
+          return def;
+        }
+        return b;
+      };
+
+      uriQuery = parseURIQuery(location.search.substr(1));
+      uriParam = {
+        antialias: __defaultBool(strBool(uriQuery.msaa && uriQuery.msaa.trim()), false),
+        verbose: __defaultBool(strBool(uriQuery.verbose && uriQuery.verbose.trim()), false),
+        info: __defaultBool(strBool(uriQuery.info && uriQuery.info.trim()), false)
+      };
+
 
       // External access to WebGL context, canvas element, and WebGLGears instance
       document.webglgears = {};
       window.addEventListener('load', function () {
         let optCtxInfo;
-
-        uriParam = {
-          antialias: false,
-          verbose: false,
-          info: false
-        };
-        // TODO: Parse URI params
 
         // Prep canvas
         document.webglgears.surface = surface = document.getElementById('surface');
@@ -64,8 +101,8 @@
       }, false);
     })();
   </script>
+</head>
 <body style="margin: 0px; padding: 0px; overflow: hidden;">
   <canvas id='surface'></canvas>
 </body>
-</head>
 </html>

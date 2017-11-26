@@ -72,6 +72,7 @@
 
           pm.set('msaa', boolAlpha(frm.msaa.checked));
           pm.set('info', boolAlpha(frm.info.checked));
+          pm.set('verbose', boolAlpha(frm.verbose.checked));
 
           paramArr = [];
           for (pair of pm) {
@@ -149,6 +150,11 @@
           <label title="Print GL related info to brower console.">
             <input type='checkbox' name='info' />
             info
+          </label>
+          <br/>
+          <label title="Be verbose.">
+            <input type='checkbox' name='verbose' />
+            verbose
           </label>
           <br/>
           <label title="Obsolete technology. Placed here just for recognition.">
