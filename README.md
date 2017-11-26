@@ -1,7 +1,9 @@
 # WebGL Gears
 'glxgears' demo rewritten as an web app
 
-[![Youtube video HERE](https://img.youtube.com/vi/FhlCLcw2qb0/0.jpg)](https://www.youtube.com/watch?v=FhlCLcw2qb0)
+[Youtube video](https://www.youtube.com/watch?v=FhlCLcw2qb0)
+
+![Screenshot of webglgears running on Firefox](/img/webglgears_firefox.png)
 
 ## What?
 This is a WebGL 1.0 port of the infamous demo 'glxgears'.
@@ -32,3 +34,6 @@ You can iframe the app, `webglgears.html`:
 ```
 
 Or you could upload the entire project to your server.
+Files required to use `WebGLGears` class are:
+* `js/gl-matrix-min.js`: Can be linked externally. [Visit their](http://glmatrix.net/) site for more info.
+* `js/webglgears-min.js`
