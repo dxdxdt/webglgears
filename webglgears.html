@@ -12,24 +12,25 @@
       var gl;
       var wg;
 
+      document.webglgears = {};
       window.addEventListener('load', function () {
         let optCtxInfo;
 
         // Prep canvas
-        surface = document.getElementById('surface');
+        document.webglgears.surface = surface = document.getElementById('surface');
         surface.width = window.innerWidth;
         surface.height = window.innerHeight;
 
         // Prep WebGL context
         optCtxInfo = WebGLGears.optimalContextParams();
         optCtxInfo.attr.antialias = false; // TODO
-        gl = surface.getContext(optCtxInfo.type, optCtxInfo.attr);
+        document.webglgears.gl = gl = surface.getContext(optCtxInfo.type, optCtxInfo.attr);
 
         // Prep WebGLGears instance
-        wg = new WebGLGears();
+        document.webglgears.wg = wg = new WebGLGears();
         wg.verbose = true; // TODO
         wg
-          .attach(window, gl)
+          .attach(gl)
           .reshape(window.innerWidth, window.innerHeight);
         wg.info(); // TODO
 

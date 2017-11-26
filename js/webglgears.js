@@ -499,12 +499,20 @@ var WebGLGears = (function () {
       var __frames = 0, __tRot0 = null, __tRate0 = null;
 
       var __init, __gear, __draw_gears, __draw_frame, __draw;
+      var __pumpGLErrors, __appendGLErrors;
       var __updateViewMatrix;
       var __gl = null, __w = null;
       var __arrGears = [];
       var __prog = {};
       var __printCallback = defaultPrintCallback;
       var __verbose = false;
+      var __health = {
+        attached: false,
+        glErrorStack: [],
+        fps: 0
+      };
+      var __animationFrameID = null;
+      var __glErrorStackSize = 20;
 
       var __mat = {
         view: mat4.create(),
@@ -537,6 +545,7 @@ var WebGLGears = (function () {
 
       __init = function () {
         let m;
+        let errStack;
 
         // Reset state members
         __frames = 0;
@@ -598,6 +607,14 @@ var WebGLGears = (function () {
         m = __gear(1.3, 2.0, 0.5, 10, 0.7);
         m.material = [ 0.2, 0.2, 1.0 ];
         __arrGears.push(m);
+
+        errStack = __pumpGLErrors();
+        if (errStack.length) {
+          let e = new Error("GLError occurred during initialisation.");
+
+          e.glErrorStack = errStack;
+          throw e;
+        }
 
         for (m of __arrGears) {
           m.vec = {
@@ -867,6 +884,7 @@ var WebGLGears = (function () {
       };
       __draw_frame = function () {
         let dt;
+        let errStack;
         const t = performance.now() / 1000.0;
 
         if (__tRot0 === null) {
@@ -888,35 +906,43 @@ var WebGLGears = (function () {
         __draw_gears();
         __gl.flush();
 
-        __frames += 1;
-
-        if (__tRate0 === null) {
-          __tRate0 = t;
+        errStack = __pumpGLErrors();
+        if (errStack.length) {
+          __appendGLErrors(errStack);
         }
-        if (t - __tRate0 >= 5.0) {
-          if (__printCallback && __verbose) {
+        else {
+          __frames += 1;
+
+          if (__tRate0 === null) {
+            __tRate0 = t;
+          }
+          if (t - __tRate0 >= 5.0) {
             const seconds = t - __tRate0;
             const fps = __frames / seconds;
-            let msg = [
-              "WebGL Gears: ",
-              __frames,
-              " frames in ",
-              seconds.toFixed(1),
-              " seconds = ",
-              fps.toFixed(3),
-              " FPS"
-            ];
 
-            __printCallback(msg.join(''));
+            __health.fps = fps;
+            if (__printCallback && __verbose) {
+              let msg = [
+                "WebGL Gears: ",
+                __frames,
+                " frames in ",
+                seconds.toFixed(1),
+                " seconds = ",
+                fps.toFixed(3),
+                " FPS"
+              ];
+
+              __printCallback(msg.join(''));
+            }
+            __tRate0 = t;
+            __frames = 0;
           }
-          __tRate0 = t;
-          __frames = 0;
         }
       };
       __draw = function () {
         if (__gl && __w) {
           __draw_frame();
-          __w.requestAnimationFrame(__draw);
+          __animationFrameID = __w.requestAnimationFrame(__draw);
         }
       };
       __updateViewMatrix = function () {
@@ -928,16 +954,46 @@ var WebGLGears = (function () {
         mat4.mul(__mat.view, __mat.view, __tmp.view.rotate.y);
         mat4.mul(__mat.view, __mat.view, __tmp.view.rotate.z);
       };
+      __pumpGLErrors = function () {
+        let err, ret = [];
+
+        while(true) {
+          err = __gl.getError();
+          if (err === __gl.NO_ERROR) {
+            break;
+          }
+          ret.push(err);
+        }
+
+        return ret;
+      };
+      __appendGLErrors = function (s) {
+        const toPop = (__health.glErrorStack.length + s.length) - __glErrorStackSize;
+
+        if (toPop > 0) {
+          __health.glErrorStack.splice(__health.glErrorStack.length - 1, toPop);
+        }
+        __health.glErrorStack = __health.glErrorStack.concat(s);
+      };
 
       Object.defineProperties(this, {
         attach: {
-          value: function (w, gl) {
+          value: function (gl, w) {
             this.detach();
             __gl = gl;
-            __w = w;
+            __w = w || window;
 
-            __init();
-            __w.requestAnimationFrame(__draw);
+            try {
+              __init();
+              __animationFrameID = __w.requestAnimationFrame(__draw);
+            }
+            catch (e) {
+                __gl = null;
+                __w = null;
+                __animationFrameID = null;
+                throw e;
+            }
+            __health.attached = true;
 
             return this;
           },
@@ -947,6 +1003,10 @@ var WebGLGears = (function () {
           value: function () {
             let g;
 
+            if (__animationFrameID) {
+              __w.cancelAnimationFrame(__animationFrameID);
+              __animationFrameID = null;
+            }
             while (__arrGears.length > 0) {
               g = __arrGears.pop();
               freeBuffers(__gl, g.flat.buf);
@@ -962,6 +1022,9 @@ var WebGLGears = (function () {
 
             __gl = null;
             __w = null;
+            __health.attached = false;
+            __health.glErrorStack = [];
+            __health.fps = 0;
 
             return this;
           },
@@ -1037,7 +1100,7 @@ var WebGLGears = (function () {
             return __printCallback;
           },
           set: function (cb) {
-            if (cb === null) {
+            if (!cb) {
               __printCallback = defaultPrintCallback;
             }
             else {
@@ -1061,6 +1124,16 @@ var WebGLGears = (function () {
               __printCallback("WebGL Gears Info", arr.join('\n'));
             }
             return this;
+          },
+          configurable: true
+        },
+        health: {
+          value: function () {
+            return {
+              attached: __health.attached,
+              glErrorStack: __health.glErrorStack.slice(),
+              fps: __health.fps
+            };
           },
           configurable: true
         }
