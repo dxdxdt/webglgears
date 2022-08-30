@@ -1,7 +1,10 @@
 <!DOCTYPE html>
-<html>
+<html lang="en-US">
 <head>
   <meta charset="utf-8" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+  <title>IFrame Test</title>
+  <link rel="icon" type="image/png" sizes="32x32" href="favicon-32x32.png">
 
   <link rel="stylesheet" href="../js/jasmine/jasmine.css" />
 
@@ -10,7 +13,7 @@
   <script type="application/javascript" src="../js/jasmine/boot.js"></script>
 
   <script type="application/javascript" src="../js/gl-matrix-min.js"></script>
-  <script type="application/javascript" src="../js/webglgears.js"></script>
+  <script type="application/javascript" src="../js/webglxgears.js"></script>
 
   <script type="application/javascript">
   (function () {
@@ -36,7 +39,7 @@
 
           iframe.setAttribute('width', '300');
           iframe.setAttribute('height', '300');
-          iframe.setAttribute('src', '../webglgears.html');
+          iframe.setAttribute('src', '../webglxgears.html');
           document.body.appendChild(iframe);
         }, 15000);
 
@@ -82,7 +85,7 @@
 
           iframe.setAttribute('width', '300');
           iframe.setAttribute('height', '300');
-          iframe.setAttribute('src', '../webglgears.html');
+          iframe.setAttribute('src', '../webglxgears.html');
           document.body.appendChild(iframe);
         }, 15000);
       })();
