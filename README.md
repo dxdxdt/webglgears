@@ -1,9 +1,11 @@
-# WebGL Gears
-'glxgears' demo rewritten as an web app
+# WebGL GLXGears <img src="/imgs/logo.png">
+MESA's `glxgears` demo rewritten as an web app in WebGL. It is a fork of [This](https://github.com/ashegoulding/webglgears).
 
-[Youtube video](https://www.youtube.com/watch?v=FhlCLcw2qb0)
+[Youtube Video](https://www.youtube.com/watch?v=FhlCLcw2qb0)
 
-![Screenshot of webglgears running on Firefox](/img/webglgears_firefox.png)
+Screenshot of WebGLXears running on [Thorium](https://thorium.rocks/).
+
+<img src="https://raw.githubusercontent.com/Alex313031/webglxgears/master/thumb.png" width="300">
 
 ## What?
 This is a WebGL 1.0 port of the infamous demo 'glxgears'.
@@ -23,8 +25,7 @@ I could have easily port, but the gears do not look the same as good old
 glxgears in that version.
 
 ## How?
-Visit [github.io page](https://ashegoulding.github.io/webglgears/index.html) that I uploaded on my github.io. Or you could clone the repo
-and open `index.html` in your browser. Follow instructions there.
+Visit [the live demo](https://ashegoulding.github.io/webglgears/index.html) on the Demos page of [thorium.rocks](https://thorium.rocks/). Or you can clone the repo and open `index.html` in your browser. Follow instructions there.
 
 ## Use as a Widget
 You can iframe the app, `webglgears.html`:
@@ -36,4 +37,4 @@ You can iframe the app, `webglgears.html`:
 Or you could upload the entire project to your server.
 Files required to use `WebGLGears` class are:
 * `js/gl-matrix-min.js`: Can be linked externally. [Visit their](http://glmatrix.net/) site for more info.
-* `js/webglgears-min.js`
+* `js/webglxgears-min.js`
