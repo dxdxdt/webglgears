@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <title>WebGL Gears Laucnher</title>
+  <script type='application/javascript'>
+    (function () {
+      "use strict";
+      var parseDim = function (str) {
+        let arr = str.split('x');
+        let n;
+        let ret = [];
+
+        if (arr.length !== 2) {
+          return null;
+        }
+        for (n of arr) {
+          n = parseInt(n);
+          if (isNaN(n)) {
+            return null;
+          }
+          ret.push(n);
+        }
+
+        return ret;
+      };
+      var boolAlpha = function (b) {
+        return b ? 'true' : 'false';
+      };
+
+      window.addEventListener('load', function () {
+        var frm = document.getElementById('frmParam');
+        var errorRow = frm.getElementsByClassName('errRow')[0];
+        var setErrorRow = function (str) {
+          if (str) {
+            errorRow.innerHTML = str;
+            errorRow.style.backgroundColor = 'red';
+            errorRow.style.color = 'white';
+          }
+          else {
+            errorRow.innerHTML = "";
+            errorRow.style.backgroundColor = 'initial';
+            errorRow.style.color = 'initial';
+          }
+        };
+
+        frm.launch.addEventListener('click', function () {
+          let pm = new Map();
+          let dim;
+          let pair;
+          let uri, paramArr;
+          let openArr = [
+            "toolbar=yes",
+            "resizable=yes" ];
+
+          switch(frm.size.value) {
+          case 'preset': dim = parseDim(frm.presetSize.value); break;
+          case 'custom':
+            dim = parseDim(frm.customSize.value);
+            if (!dim) {
+              setErrorRow("Unrecognised dimension");
+              frm.customSize.focus();
+              return;
+            }
+            break;
+          case 'default': // Fall through
+          default:
+            dim = [300, 300];
+          }
+          openArr.push("width=" + dim[0]);
+          openArr.push("height=" + dim[1]);
+
+          pm.set('msaa', boolAlpha(frm.msaa.checked));
+          pm.set('info', boolAlpha(frm.info.checked));
+          pm.set('verbose', boolAlpha(frm.verbose.checked));
+
+          paramArr = [];
+          for (pair of pm) {
+            paramArr.push(pair[0] + '=' + encodeURIComponent(pair[1]));
+          }
+
+          setErrorRow();
+          window.open(
+            "webglgears.html?" + paramArr.join('&'),
+            '_blank',
+            openArr.join(',')
+          );
+        }, false);
+        frm.customSize.addEventListener('focus', function () {
+          frm.size.value = 'custom';
+        }, false);
+        frm.presetSize.addEventListener('focus', function () {
+          frm.size.value = 'preset';
+        }, false);
+      }, false);
+    })();
+  </script>
+</head>
+<body>
+  <h1>WebGL Gears Launcher Interface</h1>
+  <p>
+    <span>Visit </span><a href="https://github.com/dxdxdt/webglgears">the github page</a>
+    <span>for details.</span>
+  </p>
+  <h2>Launch Default</h2>
+  <p>
+    <a href="webglgears.html">Launch Default</a><span>: windowed, 300x300, no MSAA</span>
+  </p>
+  <h2>Launch with Parameters</h2>
+  <p>
+    <form id='frmParam'><table>
+      <tr>
+        <th>Size</th>
+        <th>Options</th>
+      </tr>
+      <tr>
+        <td>
+          <label>
+            <input type='radio' name='size' value='default' checked />
+            default
+          </label>
+          <br/>
+          <input type='radio' name='size' value='preset' />
+          <!-- https://en.wikipedia.org/wiki/Display_resolution#Common_display_resolutions -->
+          <select name='presetSize' title="">
+            <option value='800x600'>800x600</option>
+            <option value='1024x768'>1024x768</option>
+            <option value='1280x720'>1280x720</option>
+            <option value='1280x800'>1280x800</option>
+            <option value='1280x1024'>1280x1024</option>
+            <option value='1440x900'>1440x900</option>
+            <option value='1600x900'>1600x900</option>
+            <option value='1680x1050'>1680x1050</option>
+            <option value='1920x1080'>1920x1080</option>
+            <option value='2560x1440'>2560x1440</option>
+            <option value='3840x2160'>3840x2160</option>
+          </select>
+          <br/>
+          <label>
+            <input type='radio' name='size' value='custom' />
+            <input type='text' name='customSize' placeholder="300x300" size='10' />
+          </label>
+        </td>
+        <td>
+          <label title="Multisample Anti-aliasing. Cannot specify number of samples for WebGL contexts.">
+            <input type='checkbox' name='msaa' />
+            MSAA
+          </label>
+          <br/>
+          <label title="Print GL related info to brower console.">
+            <input type='checkbox' name='info' />
+            info
+          </label>
+          <br/>
+          <label title="Be verbose.">
+            <input type='checkbox' name='verbose' />
+            verbose
+          </label>
+          <br/>
+          <label title="Obsolete technology. Placed here just for recognition.">
+            <input type='checkbox' name='stereo' disabled />
+            stereo
+          </label>
+          <br/>
+        </td>
+      </tr>
+      <tr>
+        <td colspan='2' style="text-align: right;">
+          <button name='launch' type='button' title="Launch webglgears using the parameters.">Launch</button>
+        </td>
+      </tr>
+      <tr>
+        <td colspan='2' style="font-weight: bold;" class='errRow'></td>
+      </tr>
+    </table></form>
+  </p>
+</body>
+</html>
